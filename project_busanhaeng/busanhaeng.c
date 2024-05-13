@@ -3,16 +3,20 @@
 #include<time.h> // time 함수
 #include<stdbool.h>
 
-#define LEN_MIN 15 // 기차 길이
+// 기차 길이
+#define LEN_MIN 15
 #define LEN_MAX 50
 
-#define STM_MIN 0 // 마동석 체력
+// 마동석 체력
+#define STM_MIN 0
 #define STM_MAX 5
 
-#define PROB_MIN 10 // 확률
+// 확률
+#define PROB_MIN 10
 #define PROB_MAX 90
 
-#define AGGRO_MIN 0 // 어그로 범위
+// 어그로 범위
+#define AGGRO_MIN 0
 #define AGGRO_MAX 5
 
 // 마동석 이동 방향
@@ -37,6 +41,7 @@ int citizen = 6; // 시민의 위치
 int zombie = 3; // 좀비의 위치
 int madongseok = 2; // 마동석의 위치
 int arr[3][50];
+int aggro = 1;
 
 // 인트로 출력 함수
 void intro() {
@@ -164,10 +169,18 @@ void move() {
 
 	// 시민이 움직였을 경우
 	if (citizen_move == true) {
-		printf("citizen: %d -> %d\n", train_lenght - citizen + 1, train_lenght - citizen);
+		aggro++;
+		if (aggro > AGGRO_MAX) {
+			aggro = AGGRO_MAX;
+		}
+		printf("citizen: %d -> %d (aggro: %d)\n", train_lenght - citizen + 1, train_lenght - citizen, aggro);
 	}
 	else {
-		printf("citizen: stay %d (cannot move)\n", train_lenght - citizen);
+		aggro--;
+		if (aggro < AGGRO_MIN) {
+			aggro = AGGRO_MIN;
+		}
+		printf("citizen: stay %d (cannot move) (aggro: %d)\n", train_lenght - citizen, aggro);
 	}
 
 	// 좀비가 움직였을 경우
