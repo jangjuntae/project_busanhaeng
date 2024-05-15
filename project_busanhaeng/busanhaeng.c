@@ -40,22 +40,29 @@ int count = 1; // 좀비가 두턴 주기로 움직이게 할 변수
 int citizen = 6; // 시민의 위치
 int zombie = 3; // 좀비의 위치
 int madongseok = 2; // 마동석의 위치
-int arr[3][50];
-int aggro = 1;
+char arr[3][50]; // 기차 상태 배열
+int citizen_aggro = 1; // 시민의 어그로
+int madongseok_aggro = 1; // 마동석의 어그로
+bool citizen_move = false; // 사람이 움직이냐 안움직이냐
+bool zombie_move = false; // 좀비가 움직이냐 안움직이냐
+
+//함수 세팅
+void intro();
+void input_train_lenght();
+void input_madongseok_stamina();
+void input_percentile_probability();
+void train_init(int);
+void train_state(int);
+void move_prob();
+void move_citizen();
+void move_zombie();
+void move();
+void fail_outtro();
+void success_outtro();
 
 // 인트로 출력 함수
 void intro() {
 	printf("준태를 살려라 ~~~\n\n");
-}
-
-// 성공 아웃트로 함수
-void success_outtro() {
-	printf("\nSUCCESS!\ncitizen(s) escaped to the next train");
-}
-
-// 실패 아웃트로 함수
-void fail_outtro() {
-	printf("\nfail! ㅠㅠ");
 }
 
 // train lenght 받는 조건
@@ -103,94 +110,83 @@ void input_percentile_probability() {
 	}
 }
 
-// 열차의 상태를 출력하는 함수
-void train_state(int train_len) {
-	// 첫번째 줄
+void train_init(int train_len) {
 	for (int i = 0; i < train_len; i++) {
-		printf("#");
+		arr[0][i] = '#';
+		arr[2][i] = '#';
 	}
-	printf("\n");
-
-	// 두번째줄 + 시민, 좀비, 마동석 위치
 	for (int i = 0; i < train_len; i++) {
-		if (i == 0 || i == train_len - 1) {
-			printf("#");
-		}
+		if (i == 0 || i == train_len - 1) arr[1][i] = '#';
 		// 시민
-		else if (i == train_len - citizen) {
-			printf("C");
-		}
+		else if (i == train_len - citizen) arr[1][i] = 'C';
 		// 좀비
-		else if (i == train_len - zombie) {
-			printf("Z");
-		}
+		else if (i == train_len - zombie) arr[1][i] = 'Z';
 		// 마동석
-		else if (i == train_len - madongseok) {
-			printf("M");
-		}
-		else {
-			printf(" ");
-		}
-	}
-	printf("\n");
-
-	// 세번째 줄
-	for (int i = 0; i < train_len; i++) {
-		printf("#");
+		else if (i == train_len - madongseok) arr[1][i] = 'M';
+		else arr[1][i] = ' ';
 	}
 }
 
-// 4초마다 시민 이동, 좀비 이동, 열차 출력, 시민, 좀비 상태 출력 함수
-void move() {
-	bool citizen_move = false; // 사람이 움직이냐 안움직이냐
-	bool zombie_move = false; // 좀비가 움직이냐 안움직이냐
+// 열차의 상태를 출력하는 함수
+void train_state(int train_len) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < train_len; j++) {
+			printf("%c", arr[i][j]);
+		}
+		printf("\n");
+	}
+}
 
+void move_prob() {
 	// 사람의 이동 확률
 	int rand_num_citizen = rand() % (PROB_MIN + PROB_MAX) + 1;
 	if (percentile_probability < rand_num_citizen && rand_num_citizen <= PROB_MIN + PROB_MAX) {
 		citizen_move = true;
+		arr[1][train_lenght - citizen] = ' ';
 		citizen++;
+		arr[1][train_lenght - citizen] = 'C';
 	}
 
 	// 좀비는 두턴마다 한번 이동 기회 주어짐, 좀비의 이동 확률
 	if (count % 2 != 0) {
 		int rand_num_zombie = rand() % (PROB_MIN + PROB_MAX) + 1;
 		if (rand_num_zombie <= percentile_probability) {
+			arr[1][train_lenght - zombie] = ' ';
 			zombie_move = true;
 			zombie++;
+			arr[1][train_lenght - zombie] = 'Z';
 		}
 	}
+}
 
-	// 바뀐 위치 맵 호출
-	train_state(train_lenght);
-
-	// 줄바꿈
-	printf("\n\n");
-
-	// 시민이 움직였을 경우
+// 시민이 움직였을 경우
+void move_citizen() {
 	if (citizen_move == true) {
-		aggro++;
-		if (aggro > AGGRO_MAX) {
-			aggro = AGGRO_MAX;
+		citizen_aggro++;
+		if (citizen_aggro > AGGRO_MAX) {
+			citizen_aggro = AGGRO_MAX;
 		}
-		printf("citizen: %d -> %d (aggro: %d)\n", train_lenght - citizen + 1, train_lenght - citizen, aggro);
+		printf("citizen: %d -> %d (aggro: %d)\n", train_lenght - citizen + 1, train_lenght - citizen, citizen_aggro);
 	}
 	else {
-		aggro--;
-		if (aggro < AGGRO_MIN) {
-			aggro = AGGRO_MIN;
+		citizen_aggro--;
+		if (citizen_aggro < AGGRO_MIN) {
+			citizen_aggro = AGGRO_MIN;
 		}
-		printf("citizen: stay %d (cannot move) (aggro: %d)\n", train_lenght - citizen, aggro);
+		printf("citizen: stay %d (cannot move) (aggro: %d)\n", train_lenght - citizen, citizen_aggro);
 	}
+}
 
-	// 좀비가 움직였을 경우
+void move_zombie() {
 	if (zombie_move == true) {
 		printf("zombie: %d -> %d\n", train_lenght - zombie + 1, train_lenght - zombie);
 	}
 	else {
 		printf("zombie: stay %d (cannot move)\n", train_lenght - zombie);
 	}
+}
 
+void finish() {
 	// 시민이 열차 1번 칸에 도착하여 끝날 경우 - > 승리
 	if (train_lenght - citizen == 1) {
 		success_outtro();
@@ -202,11 +198,30 @@ void move() {
 		fail_outtro();
 		exit(0);
 	}
+}
 
+// 4초마다 시민 이동, 좀비 이동, 열차 출력, 시민, 좀비 상태 출력 함수
+void move() {
+	move_prob(); // 이동 확률
+	train_state(train_lenght); // 바뀐 위치 맵 호출
+	// 줄바꿈
+	printf("\n\n");
+	move_citizen(); // 시민 이동
+	move_zombie(); // 좀비 이동
 	// 줄바꿈
 	printf("\n\n\n");
-
+	finish();
 	count++; // 좀비 이동 주기
+}
+
+// 성공 아웃트로 함수
+void success_outtro() {
+	printf("\nSUCCESS!\ncitizen(s) escaped to the next train");
+}
+
+// 실패 아웃트로 함수
+void fail_outtro() {
+	printf("\nfail! ㅠㅠ");
 }
 
 // main
@@ -224,6 +239,9 @@ int main() {
 
 	//인트로 함수 출력
 	intro();
+
+	//열차 초기화
+	train_init(train_lenght);
 
 	// 열차의 초기 상태
 	train_state(train_lenght);
