@@ -40,11 +40,14 @@ int count = 1; // 좀비가 두턴 주기로 움직이게 할 변수
 int citizen = 6; // 시민의 위치
 int zombie = 3; // 좀비의 위치
 int madongseok = 2; // 마동석의 위치
+int madongseok_move_input;
 char arr[3][50]; // 기차 상태 배열
 int citizen_aggro = 1; // 시민의 어그로
 int madongseok_aggro = 1; // 마동석의 어그로
 bool citizen_move = false; // 사람이 움직이냐 안움직이냐
 bool zombie_move = false; // 좀비가 움직이냐 안움직이냐
+bool zombie_left = false; // 좀비의 이동방향이 왼쪽
+bool zombie_right = false; // 좀비의 이동방향이 오른쪽
 
 //함수 세팅
 void intro();
@@ -56,7 +59,9 @@ void train_state(int);
 void move_prob();
 void move_citizen();
 void move_zombie();
+void move_madongseok();
 void move();
+void finish();
 void fail_outtro();
 void success_outtro();
 
@@ -135,6 +140,7 @@ void train_state(int train_len) {
 		}
 		printf("\n");
 	}
+	printf("\n\n");
 }
 
 void move_prob() {
@@ -149,12 +155,25 @@ void move_prob() {
 
 	// 좀비는 두턴마다 한번 이동 기회 주어짐, 좀비의 이동 확률
 	if (count % 2 != 0) {
+		zombie_move = false;
+		zombie_left = false;
+		zombie_right = false;
 		int rand_num_zombie = rand() % (PROB_MIN + PROB_MAX) + 1;
 		if (rand_num_zombie <= percentile_probability) {
-			arr[1][train_lenght - zombie] = ' ';
-			zombie_move = true;
-			zombie++;
-			arr[1][train_lenght - zombie] = 'Z';
+			if (citizen_aggro >= madongseok_aggro) {
+				arr[1][train_lenght - zombie] = ' ';
+				zombie++;
+				arr[1][train_lenght - zombie] = 'Z';
+				zombie_move = true;
+				zombie_right = true;
+			}
+			else {
+				arr[1][train_lenght - zombie] = ' ';
+				zombie--;
+				arr[1][train_lenght - zombie] = 'Z';
+				zombie_move = true;
+				zombie_left = true;
+			}
 		}
 	}
 }
@@ -178,12 +197,67 @@ void move_citizen() {
 }
 
 void move_zombie() {
-	if (zombie_move == true) {
+	if (zombie_move == true && zombie_left == true) {
 		printf("zombie: %d -> %d\n", train_lenght - zombie + 1, train_lenght - zombie);
+	}
+	else if (zombie_move == true && zombie_right == true) {
+		printf("zombie: %d -> %d\n", train_lenght - zombie - 1, train_lenght - zombie);
 	}
 	else {
 		printf("zombie: stay %d (cannot move)\n", train_lenght - zombie);
 	}
+}
+
+void move_madongseok() {
+	while (1) {
+		printf("madongseok move(0: stay, 1: left)>> ");
+		scanf_s("%d", &madongseok_move_input);
+		if (madongseok_move_input == 0 || madongseok_move_input == 1) {
+			break;
+		}
+		else {
+			printf("0 또는 1을 입력해주세요.\n");
+		}
+	}
+	if (madongseok_move_input == 0) {
+		if (madongseok_aggro > AGGRO_MIN) {
+			madongseok_aggro--;
+		}
+		train_state(train_lenght); // 바뀐 위치 맵 호출
+		printf("madongseok: stay %d (aggro: %d -> %d, stemina: %d)\n", train_lenght - madongseok, madongseok_aggro + 1, madongseok_aggro, madongseok_stamina);
+	}
+	else if (madongseok_move_input == 1) {
+		if (madongseok_aggro < AGGRO_MAX) {
+			madongseok_aggro++;
+		}
+		arr[1][train_lenght - madongseok] = ' ';
+		madongseok++;
+		arr[1][train_lenght - madongseok] = 'M';
+		train_state(train_lenght); // 바뀐 위치 맵 호출
+		printf("madongseok: %d -> %d (aggro: %d)\n", train_lenght - madongseok, train_lenght - madongseok - 1, madongseok_aggro);
+	}
+}
+
+// 4초마다 시민 이동, 좀비 이동, 열차 출력, 시민, 좀비 상태 출력 함수
+void move() {
+	move_prob(); // 이동 확률
+	train_state(train_lenght); // 바뀐 위치 맵 호출
+	move_citizen(); // 시민 이동
+	move_zombie(); // 좀비 이동
+	printf("\n"); // 줄바꿈
+	move_madongseok();
+	finish(); // 끝나는 경우
+	count++; // 좀비 이동 주기
+}
+
+// 성공 아웃트로 함수
+void success_outtro() {
+	printf("\nSUCCESS!\ncitizen(s) escaped to the next train");
+}
+
+// 실패 아웃트로 함수
+void fail_outtro() {
+	printf("\nfail! ㅠㅠ");
 }
 
 void finish() {
@@ -198,30 +272,6 @@ void finish() {
 		fail_outtro();
 		exit(0);
 	}
-}
-
-// 4초마다 시민 이동, 좀비 이동, 열차 출력, 시민, 좀비 상태 출력 함수
-void move() {
-	move_prob(); // 이동 확률
-	train_state(train_lenght); // 바뀐 위치 맵 호출
-	// 줄바꿈
-	printf("\n\n");
-	move_citizen(); // 시민 이동
-	move_zombie(); // 좀비 이동
-	// 줄바꿈
-	printf("\n\n\n");
-	finish();
-	count++; // 좀비 이동 주기
-}
-
-// 성공 아웃트로 함수
-void success_outtro() {
-	printf("\nSUCCESS!\ncitizen(s) escaped to the next train");
-}
-
-// 실패 아웃트로 함수
-void fail_outtro() {
-	printf("\nfail! ㅠㅠ");
 }
 
 // main
