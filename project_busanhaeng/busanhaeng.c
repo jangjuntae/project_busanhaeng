@@ -59,6 +59,7 @@ void train_state(int);
 void move_prob();
 void move_citizen();
 void move_zombie();
+void input_madongseok_move();
 void move_madongseok();
 void move();
 void finish();
@@ -181,53 +182,80 @@ void move_prob() {
 // 시민이 움직였을 경우
 void move_citizen() {
 	if (citizen_move == true) {
-		citizen_aggro++;
-		if (citizen_aggro > AGGRO_MAX) {
-			citizen_aggro = AGGRO_MAX;
+		if (citizen_aggro > AGGRO_MIN && citizen_aggro < AGGRO_MAX) {
+			citizen_aggro++;
 		}
 		printf("citizen: %d -> %d (aggro: %d)\n", train_lenght - citizen + 1, train_lenght - citizen, citizen_aggro);
 	}
 	else {
-		citizen_aggro--;
-		if (citizen_aggro < AGGRO_MIN) {
-			citizen_aggro = AGGRO_MIN;
+		if (citizen_aggro > AGGRO_MIN && citizen_aggro < AGGRO_MAX) {
+			citizen_aggro--;
 		}
 		printf("citizen: stay %d (cannot move) (aggro: %d)\n", train_lenght - citizen, citizen_aggro);
 	}
 }
 
 void move_zombie() {
-	if (zombie_move == true && zombie_left == true) {
-		printf("zombie: %d -> %d\n", train_lenght - zombie + 1, train_lenght - zombie);
-	}
-	else if (zombie_move == true && zombie_right == true) {
-		printf("zombie: %d -> %d\n", train_lenght - zombie - 1, train_lenght - zombie);
+	if (count % 2 != 0 && ((zombie + 1) != (citizen) || (zombie - 1) != (madongseok))) {
+		if (zombie_move == true && zombie_left == true) {
+			printf("zombie: %d -> %d (can move turn)\n", train_lenght - zombie + 1, train_lenght - zombie);
+		}
+		else if (zombie_move == true && zombie_right == true) {
+			printf("zombie: %d -> %d (can move turn)\n", train_lenght - zombie - 1, train_lenght - zombie);
+		}
+		else {
+			printf("zombie: stay %d (cannot move) (can move turn)\n", train_lenght - zombie);
+		}
 	}
 	else {
-		printf("zombie: stay %d (cannot move)\n", train_lenght - zombie);
+		if (zombie_move == true && zombie_left == true) {
+			printf("zombie: %d -> %d (can't move turn)\n", train_lenght - zombie + 1, train_lenght - zombie);
+		}
+		else if (zombie_move == true && zombie_right == true) {
+			printf("zombie: %d -> %d (can't move turn)\n", train_lenght - zombie - 1, train_lenght - zombie);
+		}
+		else {
+			printf("zombie: stay %d (cannot move) (can't move turn)\n", train_lenght - zombie);
+		}
+	}
+}
+
+void input_madongseok_move() {
+	while (1) {
+		if (madongseok + 1 == zombie) {
+			printf("madongseok move(0: stay)>> ");
+			scanf_s("%d", &madongseok_move_input);
+			if (madongseok_move_input == 0) {
+				break;
+			}
+			else {
+				printf("0을 입력해주세요.\n");
+			}
+		}
+		else {
+			printf("madongseok move(0: stay, 1: left)>> ");
+			scanf_s("%d", &madongseok_move_input);
+			if (madongseok_move_input == 0 || madongseok_move_input == 1) {
+				break;
+			}
+			else {
+				printf("0 또는 1을 입력해주세요.\n");
+			}
+		}
 	}
 }
 
 void move_madongseok() {
-	while (1) {
-		printf("madongseok move(0: stay, 1: left)>> ");
-		scanf_s("%d", &madongseok_move_input);
-		if (madongseok_move_input == 0 || madongseok_move_input == 1) {
-			break;
-		}
-		else {
-			printf("0 또는 1을 입력해주세요.\n");
-		}
-	}
+	input_madongseok_move();
 	if (madongseok_move_input == 0) {
-		if (madongseok_aggro > AGGRO_MIN) {
+		if (madongseok_aggro > AGGRO_MIN &&& madongseok_aggro < AGGRO_MAX) {
 			madongseok_aggro--;
 		}
 		train_state(train_lenght); // 바뀐 위치 맵 호출
 		printf("madongseok: stay %d (aggro: %d -> %d, stemina: %d)\n", train_lenght - madongseok, madongseok_aggro + 1, madongseok_aggro, madongseok_stamina);
 	}
 	else if (madongseok_move_input == 1) {
-		if (madongseok_aggro < AGGRO_MAX) {
+		if (madongseok_aggro > AGGRO_MIN && &madongseok_aggro < AGGRO_MAX) {
 			madongseok_aggro++;
 		}
 		arr[1][train_lenght - madongseok] = ' ';
@@ -295,7 +323,7 @@ int main() {
 
 	// 열차의 초기 상태
 	train_state(train_lenght);
-	printf("\n\n\n");
+	printf("\n");
 
 	// 움직임과 현재 상태
 	while (1) {
