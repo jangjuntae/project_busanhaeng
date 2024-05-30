@@ -182,13 +182,13 @@ void move_prob() {
 void move_citizen() {
 	int k = citizen_aggro;
 	if (citizen_move == true) {
-		if (citizen_aggro > AGGRO_MIN && citizen_aggro < AGGRO_MAX) {
+		if (citizen_aggro < AGGRO_MAX) {
 			citizen_aggro++;
 		}
 		printf("citizen: %d -> %d (aggro: %d -> %d)\n", train_lenght - citizen + 1, train_lenght - citizen, k, citizen_aggro);
 	}
 	else {
-		if (citizen_aggro > AGGRO_MIN && citizen_aggro < AGGRO_MAX) {
+		if (citizen_aggro > AGGRO_MIN) {
 			citizen_aggro--;
 		}
 		printf("citizen: stay %d (cannot move) (aggro: %d -> %d)\n", train_lenght - citizen, k, citizen_aggro);
@@ -263,14 +263,14 @@ void move_madongseok() {
 	input_madongseok_move();
 	int k = madongseok_aggro;
 	if (madongseok_move_input == 0) {
-		if (madongseok_aggro > AGGRO_MIN && &madongseok_aggro < AGGRO_MAX) {
+		if (madongseok_aggro > AGGRO_MIN) {
 			madongseok_aggro--;
 		}
 		train_state(train_lenght); // 바뀐 위치 맵 호출
 		printf("madongseok: stay %d (aggro: %d -> %d, stemina: %d)\n", train_lenght - madongseok, k, madongseok_aggro, madongseok_stamina);
 	}
 	else if (madongseok_move_input == 1) {
-		if (madongseok_aggro > AGGRO_MIN && &madongseok_aggro < AGGRO_MAX) {
+		if (madongseok_aggro < AGGRO_MAX) {
 			madongseok_aggro++;
 		}
 		arr[1][train_lenght - madongseok] = ' ';
